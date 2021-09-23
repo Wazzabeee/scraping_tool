@@ -16,8 +16,7 @@ def json_dump(tweets):
         json.dump(tweets, outfile, indent=4)
 
 
-if __name__ == '__main__':
-
+def test_api():
     api = auth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
     search_words = "#boruto -filter:retweets"
@@ -31,4 +30,3 @@ if __name__ == '__main__':
         dict_tweets['tweets'].append(tweet._json)
 
     json_dump(dict_tweets)
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
