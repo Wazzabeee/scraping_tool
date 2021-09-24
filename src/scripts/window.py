@@ -2,13 +2,13 @@
 This module is the GUI for Twitter API
 @author : Clément Delteil
 """
-from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text,\
-    END
 from datetime import date, datetime, timedelta
-from utils import get_dict_key
-from twitter import test_api
-from traceback import format_exc
 from os import path
+from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text, \
+    END
+from traceback import format_exc
+from twitter import test_api
+from utils import get_dict_key
 
 
 class ScraperWindow:
