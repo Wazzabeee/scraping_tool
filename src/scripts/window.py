@@ -109,7 +109,8 @@ class ScraperWindow:
             self.save_type_frame,
             text="CSV",
             variable=self.save_type_var,
-            value=2
+            value=2,
+            state='disable'
         )
         self.seven_day_check = ttk.Radiobutton(
             self.search_type_frame,
@@ -122,12 +123,14 @@ class ScraperWindow:
             text="30 Days search",
             variable=self.search_type_var,
             value=2,
+            state='disable'
         )
         self.full_archive_check = ttk.Radiobutton(
             self.search_type_frame,
             text="Full archive search",
             variable=self.search_type_var,
             value=3,
+            state='disable'
         )
 
         self.browse_button = ttk.Button(
