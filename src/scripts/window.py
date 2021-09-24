@@ -1,12 +1,13 @@
 """
 This module is the GUI for Twitter API
+@author : Clément Delteil
 """
 from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text,\
     END
 from datetime import date, datetime, timedelta
 from utils import get_dict_key
 from twitter import test_api
-import traceback
+from traceback import format_exc
 from os import path
 
 
@@ -14,17 +15,21 @@ class ScraperWindow:
     """ This class represents the twitter api window """
 
     def __init__(self):
-        """ Tkinter objects definitions """
+        """ Tkinter UI objects definitions """
 
         self.window = Tk()
+
+        # Set window theme
         self.window.tk.call("source", "../theme/sun-valley.tcl")
         self.window.tk.call("set_theme", "dark")
 
         self.window.withdraw()
         self.window.title("Scraping tool")
 
+        # Overwrite Tk callback exception to get message on the screen when error occures
         Tk.report_callback_exception = self.callback_error
-        # Search type selection
+
+        # Search type frame
         self.search_type_frame = ttk.Labelframe(
             self.window,
             text="Search type",
@@ -39,7 +44,7 @@ class ScraperWindow:
             pady=10
         )
 
-        self.search_type_var = IntVar(None, 1)
+        self.search_type_var = IntVar(None, 1)  # Variable linked to search type
 
         self.seven_day_check = ttk.Radiobutton(
             self.search_type_frame,
@@ -75,12 +80,14 @@ class ScraperWindow:
                              padx=10,
                              pady=10)
 
+        # All languages options available
         self.options = {
             "fr": "French",
             "en": "English",
             "es": "Spanish",
             "de": "German",
         }
+
         self.language_label = ttk.Label(
             self.form_frame, text="Search language")
         self.language_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
@@ -115,7 +122,9 @@ class ScraperWindow:
         self.result_type_label.grid(row=4, column=0, sticky=W, padx=5, pady=5)
         self.result_type_frame = ttk.LabelFrame(
             self.form_frame, padding="5 0 3 8")
+
         self.result_type_var = StringVar(None, "mixed")
+
         self.mixed_check = ttk.Radiobutton(
             self.result_type_frame,
             text="Mixed",
@@ -202,11 +211,11 @@ class ScraperWindow:
             command=self.search
         ).grid(row=3, column=0, sticky=N, padx=5, pady=5)
 
-        self.window.update()
-        self.center_window()
+        self.window.update()  # Update default or saved values
+        self.center_window()  # Center the window on the screen
         self.window.deiconify()
-        self.window.iconbitmap("../images/cobweb.ico")
-        self.bind_them()
+        self.window.iconbitmap("../images/cobweb.ico")  # Add icon to window
+        self.bind_them()  # Bind events to objects
 
     def bind_them(self):
         """ This method binds events to Tkinter objects """
@@ -226,12 +235,13 @@ class ScraperWindow:
     def validate_date(self, *_):
         """ This method invalidates the entry if its content is not an valid date """
 
-        today = datetime.today().strftime('%Y-%m-%d')
         if self.until_entry.get() == "":
             self.until_entry.state(["invalid"])
         else:
             try:
                 datetime.strptime(self.until_entry.get(), '%Y-%m-%d')
+
+                # checks if date is sooner than 7 days from today
                 if datetime.strptime(self.until_entry.get(), '%Y-%m-%d') <= (datetime.today() -
                                                                              timedelta(days=8)):
                     self.until_entry.state(["invalid"])
@@ -265,7 +275,7 @@ class ScraperWindow:
     def callback_error(*args):
         # Build the error message
         message = 'Generic error:\n\n'
-        message += traceback.format_exc()
+        message += format_exc()
 
         # Also log the error to a file
         # TODO
@@ -278,7 +288,7 @@ class ScraperWindow:
         # Build the error message
         if exception is not None:
             message += '\n\n'
-            message += traceback.format_exc()
+            message += format_exc()
 
         # Also log the error to a file
         # TODO
@@ -321,8 +331,8 @@ class ScraperWindow:
             return False
 
         if self.size.get() <= 0:
-            messagebox.showerror(title="Value error", message="We expect type positive int number "
-                                                              "of number of results")
+            messagebox.showerror(title="Value error", message="We expect a positive number "
+                                                              "of results")
             return False
 
         return True
@@ -335,20 +345,20 @@ class ScraperWindow:
             num = self.size.get()
             lan = get_dict_key(self.options, self.language.get())
             res_type = self.result_type_var.get()
-            path = self.save_path_entry.get()
+            save_path = self.save_path_entry.get()
 
-            print(query, num, lan, res_type, path)
-            test_api(query, path, num, lan, res_type)
+            print(query, num, lan, res_type, save_path)
+            test_api(query, save_path, num, lan, res_type)
 
     def update_path(self):
         """ Update path entry with user choice """
 
-        path = filedialog.askdirectory()
+        save_path = filedialog.askdirectory()
         self.save_path_entry.delete(0, END)  # Remove current text in entry
-        self.save_path_entry.insert(0, path)  # Insert the 'path'
+        self.save_path_entry.insert(0, save_path)  # Insert the 'path'
 
     def start(self):
         """ Display Tkinter window """
 
-        self.update_entries()
+        self.update_entries()  # Updates entries with saved or default values
         self.window.mainloop()
