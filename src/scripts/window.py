@@ -29,56 +29,14 @@ class ScraperWindow:
         # Overwrite Tk callback exception to get message on the screen when error occures
         Tk.report_callback_exception = self.callback_error
 
-        # Search type frame
-        self.search_type_frame = ttk.Labelframe(
-            self.window,
-            text="Search type",
-            borderwidth=1,
-            padding="80 3 12 12"
-        )
-        self.search_type_frame.grid(
-            column=0,
-            row=0,
-            sticky=(N, W, E, S),
-            padx=10,
-            pady=10
-        )
-
-        self.search_type_var = IntVar(None, 1)  # Variable linked to search type
-
-        self.seven_day_check = ttk.Radiobutton(
-            self.search_type_frame,
-            text="7 Days search",
-            variable=self.search_type_var,
-            value=1,
-        ).grid(row=1, column=1, sticky=S, padx=10, pady=10)
-        self.thirty_day_check = ttk.Radiobutton(
-            self.search_type_frame,
-            text="30 Days search",
-            variable=self.search_type_var,
-            value=2,
-        ).grid(row=1, column=2, sticky=S, padx=10, pady=10)
-        self.full_archive_check = ttk.Radiobutton(
-            self.search_type_frame,
-            text="Full archive search",
-            variable=self.search_type_var,
-            value=3,
-        )
-        self.full_archive_check.grid(row=1,
-                                     column=3,
-                                     sticky=S,
-                                     padx=10,
-                                     pady=10)
-
-        # Seven days search form
-        self.form_frame = ttk.Labelframe(
-            self.window, text="Search form", borderwidth=1, padding="3 3 12 12"
-        )
-        self.form_frame.grid(column=0,
-                             row=1,
-                             sticky=(N, W, E, S),
-                             padx=10,
-                             pady=10)
+        # All variables linked to user choices
+        self.search_type_var = IntVar(None, 1)
+        self.language = StringVar()
+        self.geocode = StringVar()
+        self.date = StringVar()
+        self.save_type_var = IntVar(None, 1)
+        self.size = IntVar()
+        self.result_type_var = StringVar(None, "mixed")
 
         # All languages options available
         self.options = {
@@ -88,42 +46,40 @@ class ScraperWindow:
             "de": "German",
         }
 
-        self.language_label = ttk.Label(
-            self.form_frame, text="Search language")
-        self.language_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.language = StringVar()
+        # Search type frame
+        self.search_type_frame = ttk.Labelframe(
+            self.window,
+            text="Search type",
+            borderwidth=1,
+            padding="80 3 12 12"
+        )
+        self.form_frame = ttk.Labelframe(
+            self.window, text="Search form", borderwidth=1, padding="3 3 12 12"
+        )
+        self.save_frame = ttk.Labelframe(
+            self.window, text="Save", borderwidth=1, padding="3 3 12 12"
+        )
+        self.result_type_frame = ttk.LabelFrame(self.form_frame, padding="5 0 3 8")
+        self.save_type_frame = ttk.Labelframe(self.save_frame, padding="5 0 3 8")
+
         self.language_drop = ttk.OptionMenu(
             self.form_frame, self.language, self.options['en'], *self.options.values()
         )
-        self.language_drop.grid(column=1, row=0, pady=20, padx=10, sticky=W)
 
+        self.language_label = ttk.Label(self.form_frame, text="Search language")
         self.date_label = ttk.Label(self.form_frame, text="Search until")
-        self.date_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
-        self.date = StringVar()
-        self.until_entry = ttk.Entry(self.form_frame, textvariable=self.date)
-        self.until_entry.insert(-1, "YYYY-MM-DD")
-        self.until_entry.grid(row=1, column=1, sticky=W, padx=10, pady=10)
-
         self.geocode_label = ttk.Label(self.form_frame, text="Results near")
-        self.geocode_label.grid(row=2, column=0, sticky=W, padx=5, pady=5)
-        self.geocode = StringVar()
-        self.geocode_entry = ttk.Entry(
-            self.form_frame, textvariable=self.geocode)
-        self.geocode_entry.insert(-1, "XXX,YYY,ZZ")
-        self.geocode_entry.grid(row=2, column=1, sticky=W, padx=10, pady=10)
-
         self.size_label = ttk.Label(self.form_frame, text="Number of results")
-        self.size_label.grid(row=3, column=0, sticky=W, padx=5, pady=5)
-        self.size = IntVar()
-        self.size_entry = ttk.Entry(self.form_frame, textvariable=self.size)
-        self.size_entry.grid(row=3, column=1, sticky=W, padx=10, pady=10)
-
         self.result_type_label = ttk.Label(self.form_frame, text="Result type")
-        self.result_type_label.grid(row=4, column=0, sticky=W, padx=5, pady=5)
-        self.result_type_frame = ttk.LabelFrame(
-            self.form_frame, padding="5 0 3 8")
+        self.save_path_label = ttk.Label(self.save_frame, text="Save directory")
+        self.save_type_label = ttk.Label(self.save_frame, text="Save format")
+        self.query_label = ttk.Label(self.form_frame, text="Query")
 
-        self.result_type_var = StringVar(None, "mixed")
+        self.query_entry = Text(self.form_frame, width="50", height="5")
+        self.until_entry = ttk.Entry(self.form_frame, textvariable=self.date)
+        self.geocode_entry = ttk.Entry(self.form_frame, textvariable=self.geocode)
+        self.size_entry = ttk.Entry(self.form_frame, textvariable=self.size)
+        self.save_path_entry = ttk.Entry(self.save_frame, text="", width=55)
 
         self.mixed_check = ttk.Radiobutton(
             self.result_type_frame,
@@ -131,86 +87,97 @@ class ScraperWindow:
             variable=self.result_type_var,
             value="mixed"
         )
-
         self.recent_check = ttk.Radiobutton(
             self.result_type_frame,
             text="Recent",
             variable=self.result_type_var,
             value="recent",
         )
-
         self.popular_check = ttk.Radiobutton(
             self.result_type_frame,
             text="Popular",
             variable=self.result_type_var,
             value="popular",
         )
-
-        self.result_type_frame.grid(row=4, column=1, pady=10, padx=10)
-        self.mixed_check.pack(expand=True, side=LEFT)
-        self.recent_check.pack(expand=True, side=LEFT)
-        self.popular_check.pack(expand=True, side=LEFT)
-
-        self.query_label = ttk.Label(self.form_frame, text="Query")
-        self.query_label.grid(row=5, column=0, sticky=W, padx=5, pady=5)
-        self.query_entry = Text(self.form_frame, width="50", height="5")
-        self.query_entry.grid(row=5, column=1, sticky=W, padx=10, pady=10)
-
-        # Seven days search form
-        self.save_frame = ttk.Labelframe(
-            self.window, text="Save", borderwidth=1, padding="3 3 12 12"
-        )
-        self.save_frame.grid(column=0,
-                             row=2,
-                             sticky=(N, W, E, S),
-                             padx=10,
-                             pady=10)
-
-        self.save_path_label = ttk.Label(
-            self.save_frame, text="Save directory")
-        self.save_path_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.save_path_entry = ttk.Entry(self.save_frame, text="", width=55)
-        self.save_path_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
-        self.browse_button = ttk.Button(
-            self.save_frame,
-            text="Browse",
-            style="Accent.TButton",
-            command=self.update_path,
-        )
-        self.browse_button.grid(row=0, column=2, sticky=W, padx=5, pady=5)
-
-        self.save_type_label = ttk.Label(self.save_frame, text="Save format")
-        self.save_type_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
-
-        self.save_type_frame = ttk.Labelframe(
-            self.save_frame, padding="5 0 3 8")
-        self.save_type_var = IntVar(None, 1)
-
         self.json_check = ttk.Radiobutton(
             self.save_type_frame,
             text="JSON",
             variable=self.save_type_var,
             value=1
         )
-
         self.csv_check = ttk.Radiobutton(
             self.save_type_frame,
             text="CSV",
             variable=self.save_type_var,
             value=2
         )
+        self.seven_day_check = ttk.Radiobutton(
+            self.search_type_frame,
+            text="7 Days search",
+            variable=self.search_type_var,
+            value=1,
+        )
+        self.thirty_day_check = ttk.Radiobutton(
+            self.search_type_frame,
+            text="30 Days search",
+            variable=self.search_type_var,
+            value=2,
+        )
+        self.full_archive_check = ttk.Radiobutton(
+            self.search_type_frame,
+            text="Full archive search",
+            variable=self.search_type_var,
+            value=3,
+        )
 
-        self.save_type_frame.grid(row=1, column=1, pady=10, padx=10)
-        self.json_check.pack(expand=True, side=LEFT)
-        self.csv_check.pack(expand=True, side=LEFT)
-
+        self.browse_button = ttk.Button(
+            self.save_frame,
+            text="Browse",
+            style="Accent.TButton",
+            command=self.update_path,
+        )
         self.search_button = ttk.Button(
             self.window,
             text="Search",
             style="Accent.TButton",
             command=self.search
-        ).grid(row=3, column=0, sticky=N, padx=5, pady=5)
+        )
 
+        self.search_type_frame.grid(column=0, row=0, sticky=(N, W, E, S), padx=10, pady=10)
+        self.seven_day_check.grid(row=1, column=1, sticky=S, padx=10, pady=10)
+        self.thirty_day_check.grid(row=1, column=2, sticky=S, padx=10, pady=10)
+        self.full_archive_check.grid(row=1, column=3, sticky=S, padx=10, pady=10)
+        self.form_frame.grid(column=0, row=1, sticky=(N, W, E, S), padx=10, pady=10)
+        self.language_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        self.language_drop.grid(column=1, row=0, pady=20, padx=10, sticky=W)
+        self.date_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        self.until_entry.grid(row=1, column=1, sticky=W, padx=10, pady=10)
+        self.geocode_label.grid(row=2, column=0, sticky=W, padx=5, pady=5)
+        self.geocode_entry.grid(row=2, column=1, sticky=W, padx=10, pady=10)
+        self.size_label.grid(row=3, column=0, sticky=W, padx=5, pady=5)
+        self.size_entry.grid(row=3, column=1, sticky=W, padx=10, pady=10)
+        self.result_type_label.grid(row=4, column=0, sticky=W, padx=5, pady=5)
+        self.result_type_frame.grid(row=4, column=1, pady=10, padx=10)
+        self.mixed_check.pack(expand=True, side=LEFT)
+        self.recent_check.pack(expand=True, side=LEFT)
+        self.popular_check.pack(expand=True, side=LEFT)
+        self.query_label.grid(row=5, column=0, sticky=W, padx=5, pady=5)
+        self.query_entry.grid(row=5, column=1, sticky=W, padx=10, pady=10)
+        self.save_frame.grid(column=0, row=2, sticky=(N, W, E, S), padx=10, pady=10)
+        self.save_path_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        self.save_path_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
+        self.browse_button.grid(row=0, column=2, sticky=W, padx=5, pady=5)
+        self.save_type_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        self.search_button.grid(row=3, column=0, sticky=N, padx=5, pady=5)
+        self.save_type_frame.grid(row=1, column=1, pady=10, padx=10)
+        self.json_check.pack(expand=True, side=LEFT)
+        self.csv_check.pack(expand=True, side=LEFT)
+
+        # Insert format values
+        self.until_entry.insert(-1, "YYYY-MM-DD")
+        self.geocode_entry.insert(-1, "XXX,YYY,ZZ")
+
+        # Make window appear again
         self.window.update()  # Update default or saved values
         self.center_window()  # Center the window on the screen
         self.window.deiconify()
