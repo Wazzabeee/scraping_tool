@@ -1,4 +1,5 @@
 from constants import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN_SECRET, ACCESS_TOKEN
+from datetime import date
 import tweepy as tw
 import json
 
@@ -9,31 +10,28 @@ def auth(consumer_key, consumer_secret, access_token, access_token_secret):
     return tw.API(authentification, wait_on_rate_limit=True)
 
 
-def json_dump(tweets, path):
-    # path = "C:\\Users\\Clément\\PycharmProjects\\twitter_api\\output"
+def format_file_name(number, language, res_type):
 
-    with open('data.json', 'w') as outfile:
+    return date.today().strftime("%b-%d-%Y") + '_' + str(number) + '_' + language + '_' + res_type
+
+
+def json_dump(tweets, path, filename):
+
+    print('results saved in :' + path + '/' + filename + '.json')
+    with open(path + '/' + filename + '.json', 'w') as outfile:
         json.dump(tweets, outfile, indent=4)
 
-    print("done")
 
+def test_api(query, save_directory, number=10, language="en", res_type="recent"):
 
-def hello_world():
-    print("hello world")
-
-
-def test_api(query, number, language, type, save_directory):
     api = auth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
-    tweets = tw.Cursor(api.search, q=query, lang='fr', result_type=type).items(number)
-    # search_words = "#boruto -filter:retweets"
-    # tweets = tw.Cursor(api.search,
-                       # q=search_words).items(5)
+    tweets = tw.Cursor(api.search, q=query, lang=language, result_type=res_type).items(number)
 
-    dict_tweets = {}
-    dict_tweets['tweets'] = []
+    dict_tweets = {'tweets': []}
 
     for tweet in tweets:
         dict_tweets['tweets'].append(tweet._json)
 
-    json_dump(dict_tweets, save_directory)
+    filename = format_file_name(number, language, res_type)
+    json_dump(dict_tweets, save_directory, filename)

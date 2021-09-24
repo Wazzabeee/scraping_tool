@@ -1,15 +1,21 @@
 """
 This module is the GUI for Twitter API
 """
-from tkinter import Tk, ttk, filedialog, IntVar, StringVar, N, S, E, W, LEFT, Text, END
-from utils import get_result_type, get_dict_key
+from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text,\
+    END
+from datetime import date, datetime, timedelta
+from utils import get_dict_key
 from twitter import test_api
+import traceback
+from os import path
 
 
 class ScraperWindow:
     """ This class represents the twitter api window """
+
     def __init__(self):
-        """Tkinter objects definitions"""
+        """ Tkinter objects definitions """
+
         self.window = Tk()
         self.window.tk.call("source", "../theme/sun-valley.tcl")
         self.window.tk.call("set_theme", "dark")
@@ -17,6 +23,7 @@ class ScraperWindow:
         self.window.withdraw()
         self.window.title("Scraping tool")
 
+        Tk.report_callback_exception = self.callback_error
         # Search type selection
         self.search_type_frame = ttk.Labelframe(
             self.window,
@@ -69,7 +76,6 @@ class ScraperWindow:
                              pady=10)
 
         self.options = {
-            "lg": "Language",
             "fr": "French",
             "en": "English",
             "es": "Spanish",
@@ -80,7 +86,7 @@ class ScraperWindow:
         self.language_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.language = StringVar()
         self.language_drop = ttk.OptionMenu(
-            self.form_frame, self.language, *self.options.values()
+            self.form_frame, self.language, self.options['en'], *self.options.values()
         )
         self.language_drop.grid(column=1, row=0, pady=20, padx=10, sticky=W)
 
@@ -109,26 +115,26 @@ class ScraperWindow:
         self.result_type_label.grid(row=4, column=0, sticky=W, padx=5, pady=5)
         self.result_type_frame = ttk.LabelFrame(
             self.form_frame, padding="5 0 3 8")
-        self.result_type_var = IntVar(None, 1)
+        self.result_type_var = StringVar(None, "mixed")
         self.mixed_check = ttk.Radiobutton(
             self.result_type_frame,
             text="Mixed",
             variable=self.result_type_var,
-            value=1
+            value="mixed"
         )
 
         self.recent_check = ttk.Radiobutton(
             self.result_type_frame,
             text="Recent",
             variable=self.result_type_var,
-            value=2,
+            value="recent",
         )
 
         self.popular_check = ttk.Radiobutton(
             self.result_type_frame,
             text="Popular",
             variable=self.result_type_var,
-            value=3,
+            value="popular",
         )
 
         self.result_type_frame.grid(row=4, column=1, pady=10, padx=10)
@@ -196,11 +202,89 @@ class ScraperWindow:
             command=self.search
         ).grid(row=3, column=0, sticky=N, padx=5, pady=5)
 
-        # Center window on screen
         self.window.update()
         self.center_window()
         self.window.deiconify()
         self.window.iconbitmap("../images/cobweb.ico")
+        self.bind_them()
+
+    def bind_them(self):
+        """ This method binds events to Tkinter objects """
+
+        self.size_entry.bind("<FocusOut>", self.validate_int)
+        self.size_entry.bind("<FocusIn>", self.validate_int)
+        self.size_entry.bind("<KeyRelease>", self.validate_int)
+
+        self.save_path_entry.bind("<FocusOut>", self.validate_path)
+        self.save_path_entry.bind("<FocusIn>", self.validate_path)
+        self.save_path_entry.bind("<KeyRelease>", self.validate_path)
+
+        self.until_entry.bind("<FocusIn>", self.validate_date)
+        self.until_entry.bind("<FocusOut>", self.validate_date)
+        self.until_entry.bind("<KeyRelease>", self.validate_date)
+
+    def validate_date(self, *_):
+        """ This method invalidates the entry if its content is not an valid date """
+
+        today = datetime.today().strftime('%Y-%m-%d')
+        if self.until_entry.get() == "":
+            self.until_entry.state(["invalid"])
+        else:
+            try:
+                datetime.strptime(self.until_entry.get(), '%Y-%m-%d')
+                if datetime.strptime(self.until_entry.get(), '%Y-%m-%d') <= (datetime.today() -
+                                                                             timedelta(days=8)):
+                    self.until_entry.state(["invalid"])
+                else:
+                    self.until_entry.state(["!invalid"])
+            except ValueError:
+                self.until_entry.state(["invalid"])
+
+    def validate_int(self, *_):
+        """ This method invalidates the entry if its content is not an integer """
+
+        if self.size_entry.get() == "":
+            self.size_entry.state(["invalid"])
+        else:
+            try:
+                if int(self.size_entry.get()) <= 0:
+                    self.size_entry.state(["invalid"])
+                else:
+                    self.size_entry.state(["!invalid"])
+            except ValueError:
+                self.size_entry.state(["invalid"])
+
+    def validate_path(self, *_):
+        """ This method invalidate the entry if its content is not an existing path """
+
+        # if path is empty or incorrect
+        if self.save_path_entry.get() == "" or not(path.exists(self.save_path_entry.get())):
+            self.save_path_entry.state(["invalid"])
+
+    @staticmethod
+    def callback_error(*args):
+        # Build the error message
+        message = 'Generic error:\n\n'
+        message += traceback.format_exc()
+
+        # Also log the error to a file
+        # TODO
+
+        # Show the error to the user
+        messagebox.showerror('Error', message)
+
+    @staticmethod
+    def error(message, exception):
+        # Build the error message
+        if exception is not None:
+            message += '\n\n'
+            message += traceback.format_exc()
+
+        # Also log the error to a file
+        # TODO
+
+        # Show the error to the user
+        messagebox.showerror('Error', message)
 
     def center_window(self):
         """ Centers the window on the screen based on screen size """
@@ -210,14 +294,36 @@ class ScraperWindow:
         screen_height = int((self.window.winfo_screenheight() - win_height) / 2)
         self.window.geometry(f"{win_width}x{win_height}+{screen_width}+{screen_height}")
 
+    def update_entries(self):
+        """ Updates entries with default parameters """
+
+        self.until_entry.delete(0, END)
+        self.until_entry.insert(0, date.today() - timedelta(days=7))
+
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
 
-        if self.language.get() != "Language":
-            print("Language selected")
-        else:
-            print("You must select a language")
-        # self.form_frame.grid_forget()
+        save_path = self.save_path_entry.get()
+        if save_path == '':
+            messagebox.showerror(title="Missing parameter", message="You must select a save "
+                                                                    "directory")
+            return False
+
+        if not(path.exists(save_path)):
+            messagebox.showerror(title="Wrong path", message="You must select a valid save path")
+            return False
+
+        try:
+            self.size.get()
+        except Exception as e:
+            self.error('Generic error', e)
+
+            return False
+
+        if self.size.get() <= 0:
+            messagebox.showerror(title="Value error", message="We expect type positive int number "
+                                                              "of number of results")
+            return False
 
         return True
 
@@ -227,11 +333,12 @@ class ScraperWindow:
         if self.parameters_verification():
             query = self.query_entry.get("1.0", "end-1c")
             num = self.size.get()
-            lan = get_dict_key(self, self.options, self.language.get())
-            res_type = get_result_type(self, self.result_type_var.get())
+            lan = get_dict_key(self.options, self.language.get())
+            res_type = self.result_type_var.get()
             path = self.save_path_entry.get()
 
-            test_api(query, num, lan, res_type, path)
+            print(query, num, lan, res_type, path)
+            test_api(query, path, num, lan, res_type)
 
     def update_path(self):
         """ Update path entry with user choice """
@@ -243,4 +350,5 @@ class ScraperWindow:
     def start(self):
         """ Display Tkinter window """
 
+        self.update_entries()
         self.window.mainloop()
