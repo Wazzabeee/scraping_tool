@@ -211,6 +211,8 @@ class ScraperWindow:
 
         if self.geocode_entry.get() == "":
             self.geocode_entry.state(["invalid"])
+            return False
+
         else:
             try:
                 geocode = self.geocode_entry.get()
@@ -220,21 +222,27 @@ class ScraperWindow:
                         radius, unit = separate_int_string(rad)
                         if radius.isnumeric() and (str(unit) == "km" or str(unit) == "mi"):
                             self.geocode_entry.state(["!invalid"])
+                            return True
                         else:
                             self.geocode_entry.state(["invalid"])
+                            return False
                     else:
                         self.geocode_entry.state(["invalid"])
+                        return False
                 else:
                     self.geocode_entry.state(["invalid"])
+                    return False
 
             except ValueError:
                 self.geocode_entry.state(["invalid"])
+                return False
 
     def validate_date(self, *_):
         """ This method invalidates the entry if its content is not an valid date """
 
         if self.until_entry.get() == "":
             self.until_entry.state(["invalid"])
+            return False
         else:
             try:
                 datetime.strptime(self.until_entry.get(), '%Y-%m-%d')
@@ -243,31 +251,51 @@ class ScraperWindow:
                 if datetime.strptime(self.until_entry.get(), '%Y-%m-%d') <= (datetime.today() -
                                                                              timedelta(days=8)):
                     self.until_entry.state(["invalid"])
+                    return False
                 else:
                     self.until_entry.state(["!invalid"])
+                    return True
+
             except ValueError:
                 self.until_entry.state(["invalid"])
+                return False
 
     def validate_int(self, *_):
         """ This method invalidates the entry if its content is not an integer """
 
         if self.size_entry.get() == "":
             self.size_entry.state(["invalid"])
+            return False
         else:
             try:
                 if int(self.size_entry.get()) <= 0:
                     self.size_entry.state(["invalid"])
+                    return False
                 else:
                     self.size_entry.state(["!invalid"])
+                    return True
+
             except ValueError:
                 self.size_entry.state(["invalid"])
+                return False
+
+    def validate_query(self, *_):
+        """ This method invalidates the entry if the query is empty """
+        if self.query_entry.get("1.0", "end-1c") == "":
+            return False
+        else:
+            return True
 
     def validate_path(self, *_):
-        """ This method invalidate the entry if its content is not an existing path """
+        """ This method invalidates the entry if its content is not an existing path """
 
         # if path is empty or incorrect
         if self.save_path_entry.get() == "" or not (path.exists(self.save_path_entry.get())):
             self.save_path_entry.state(["invalid"])
+            return False
+        else:
+            self.save_path_entry.state(["!invalid"])
+            return True
 
     @staticmethod
     def callback_error(*args):
@@ -311,42 +339,72 @@ class ScraperWindow:
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
 
-        save_path = self.save_path_entry.get()
-        if save_path == '':
-            messagebox.showerror(title="Missing parameter", message="You must select a save "
+        default = [False, False, False, False]
+
+        if not (self.validate_date()):
+            if not (
+                    messagebox.askyesno(title="Invalid parameter",
+                                        message="The date you've entered "
+                                                "is "
+                                                "not valid.\nDo you want to "
+                                                "proceed anyway ?\nDefault is "
+                                                "date is 7 days ago ")):
+                return False
+            else:
+                default[1] = True
+
+        if not (self.validate_geocode()):
+            if not (messagebox.askyesno(title="Invalid parameter", message="The geocode you've "
+                                                                           "entered "
+                                                                           "is not valid. Good format is : 32,55,20km"
+                                                                           " lattiude,longitude,"
+                                                                           "radius+unit. Latitude is +- 90"
+                                                                           " Longitude =- 180"
+                                                                           " radius units : km, mi")):
+                return False
+            else:
+                default[2] = True
+
+        if not (self.validate_int()):
+            if not (messagebox.askyesno(title="Invalid parameter", message="You must select a "
+                                                                           "positive int number. "
+                                                                           "Do you still wish to "
+                                                                           "proceed ? Default is "
+                                                                           "10 ")):
+                return False
+            else:
+                default[3] = True
+
+        if not (self.validate_path()):
+            messagebox.showerror(title="Invalid parameter", message="You must select a correct "
+                                                                    "save "
                                                                     "directory")
             return False
 
-        if not (path.exists(save_path)):
-            messagebox.showerror(title="Wrong path", message="You must select a valid save path")
+        if not (self.validate_query()):
+            messagebox.showerror(title="Invalid parameter", message="You must enter a query")
             return False
 
-        try:
-            self.size.get()
-        except Exception as e:
-            self.error('Generic error', e)
-
-            return False
-
-        if self.size.get() <= 0:
-            messagebox.showerror(title="Value error", message="We expect a positive number "
-                                                              "of results")
-            return False
-
-        return True
+        default[0] = True
+        return default
 
     def search(self):
         """ Send search parameters to API bridge """
 
-        if self.parameters_verification():
-            query = self.query_entry.get("1.0", "end-1c")
-            num = self.size.get()
-            lan = get_dict_key(self.options, self.language.get())
-            res_type = self.result_type_var.get()
-            save_path = self.save_path_entry.get()
+        # only query is mandatory parameter
+        parameters = self.parameters_verification()
 
-            print(query, num, lan, res_type, save_path)
-            test_api(query, save_path, num, lan, res_type)
+        if parameters[0]:
+            query = self.query_entry.get("1.0", "end-1c")
+            save_path = self.save_path_entry.get()
+            res_type = self.result_type_var.get()
+
+            num = self.size.get() if parameters[1] else ""
+            lan = get_dict_key(self.options, self.language.get()) if parameters[2] else ""
+            geo_code = self.geocode_entry.get() if parameters[3] else ""
+
+            print(query, geo_code, num, lan, res_type, save_path)
+            test_api(query, save_path, geo_code, num, lan, res_type)
 
     def update_path(self):
         """ Update path entry with user choice """
