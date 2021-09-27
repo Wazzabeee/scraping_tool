@@ -8,7 +8,7 @@ from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E,
     END
 from traceback import format_exc
 from twitter import test_api
-from utils import get_dict_key
+from utils import get_dict_key, separate_int_string
 
 
 class ScraperWindow:
@@ -202,6 +202,34 @@ class ScraperWindow:
         self.until_entry.bind("<FocusOut>", self.validate_date)
         self.until_entry.bind("<KeyRelease>", self.validate_date)
 
+        self.geocode_entry.bind("<FocusIn>", self.validate_geocode)
+        self.geocode_entry.bind("<FocusOut>", self.validate_geocode)
+        self.geocode_entry.bind("<KeyRelease>", self.validate_geocode)
+
+    def validate_geocode(self, *_):
+        """ This method invalidates the entry if its content is not a valid geolocalization """
+
+        if self.geocode_entry.get() == "":
+            self.geocode_entry.state(["invalid"])
+        else:
+            try:
+                geocode = self.geocode_entry.get()
+                lat, long, rad = geocode.split(",")
+                if not (lat == "" or long == "" or rad == ""):
+                    if -90 <= int(lat) <= 90 and -180 <= int(long) <= 180:
+                        radius, unit = separate_int_string(rad)
+                        if radius.isnumeric() and (str(unit) == "km" or str(unit) == "mi"):
+                            self.geocode_entry.state(["!invalid"])
+                        else:
+                            self.geocode_entry.state(["invalid"])
+                    else:
+                        self.geocode_entry.state(["invalid"])
+                else:
+                    self.geocode_entry.state(["invalid"])
+
+            except ValueError:
+                self.geocode_entry.state(["invalid"])
+
     def validate_date(self, *_):
         """ This method invalidates the entry if its content is not an valid date """
 
@@ -238,7 +266,7 @@ class ScraperWindow:
         """ This method invalidate the entry if its content is not an existing path """
 
         # if path is empty or incorrect
-        if self.save_path_entry.get() == "" or not(path.exists(self.save_path_entry.get())):
+        if self.save_path_entry.get() == "" or not (path.exists(self.save_path_entry.get())):
             self.save_path_entry.state(["invalid"])
 
     @staticmethod
@@ -289,7 +317,7 @@ class ScraperWindow:
                                                                     "directory")
             return False
 
-        if not(path.exists(save_path)):
+        if not (path.exists(save_path)):
             messagebox.showerror(title="Wrong path", message="You must select a valid save path")
             return False
 
