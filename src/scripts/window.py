@@ -7,6 +7,7 @@ from os import path
 from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text, \
     END
 from traceback import format_exc
+from os import path
 from twitter import test_api
 from utils import get_dict_key, separate_int_string
 from data import save_search_settings
@@ -38,7 +39,7 @@ class ScraperWindow:
         self.date = StringVar()
         self.save_type_var = IntVar(None, 1)
         self.size = IntVar()
-        self.result_type_var = StringVar(None, "mixed")
+        self.result_type_var = StringVar()
 
         # All languages options available
         self.options = {
@@ -339,24 +340,26 @@ class ScraperWindow:
         self.until_entry.delete(0, END)
         self.until_entry.insert(0, date.today() - timedelta(days=7))
 
-        with open('../settings/data.json') as f:
-            data = json.load(f)
+        if path.exists('../settings/data.json'):
 
-        for item in data['last_research']:
-            if item['query'] != "":
-                self.query_entry.insert(END, item['query'])
-            if item['save_path'] != "":
-                self.save_path_entry.insert(END, item['save_path'])
-            if item['geocode'] != "":
-                self.geocode_entry.insert(END, item['geocode'])
-            if item['number'] != 0:
-                self.size_entry.insert(END, item['number'])
-            if item['until'] != "":
-                self.until_entry.insert(END, item['until'])
-            if item['research_type'] != "":
-                self.result_type_var = item['research_type']
-            if item['language'] != "":
-                self.language.set(self.options[item['language']])
+            with open('../settings/data.json') as f:
+                data = json.load(f)
+
+            for item in data['last_research']:
+                if item['query'] != "":
+                    self.query_entry.insert(END, item['query'])
+                if item['save_path'] != "":
+                    self.save_path_entry.insert(END, item['save_path'])
+                if item['geocode'] != "":
+                    self.geocode_entry.insert(END, item['geocode'])
+                if item['number'] != 0:
+                    self.size_entry.insert(END, item['number'])
+                if item['until'] != "":
+                    self.until_entry.insert(END, item['until'])
+                if item['research_type'] != "":
+                    self.result_type_var.set(item['research_type'])
+                if item['language'] != "":
+                    self.language.set(self.options[item['language']])
 
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
@@ -427,8 +430,13 @@ class ScraperWindow:
             num = int(self.size_entry.get()) if parameters[3] else 10
 
             print(query, save_path, geo_code, num, until, lan, res_type)
-            test_api(query, save_path, geo_code, num, date, lan, res_type)
-            save_search_settings(query, save_path, geo_code, num, date, lan, res_type)
+            if test_api(query, save_path, geo_code, num, until, lan, res_type):
+                save_search_settings(query, save_path, geo_code, num, until, lan, res_type)
+                messagebox.showinfo(title="Success", message="The results have been saved to the "
+                                                             "specified location.")
+            else:
+                messagebox.showerror(titl="Error", message="Something wrong happenned. Pleae "
+                                                           "check API status or query format.")
 
     def update_path(self):
         """ Update path entry with user choice """

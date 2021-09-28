@@ -38,3 +38,4 @@ def test_api(query, save_directory, geocode="", number=10, until="", language="e
 
     filename = format_file_name(number, language, res_type)
     json_dump(dict_tweets, save_directory, filename)
+    return True
