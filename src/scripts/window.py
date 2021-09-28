@@ -9,6 +9,8 @@ from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E,
 from traceback import format_exc
 from twitter import test_api
 from utils import get_dict_key, separate_int_string
+from data import save_search_settings
+import json
 
 
 class ScraperWindow:
@@ -177,8 +179,8 @@ class ScraperWindow:
         self.csv_check.pack(expand=True, side=LEFT)
 
         # Insert format values
-        self.until_entry.insert(-1, "YYYY-MM-DD")
-        self.geocode_entry.insert(-1, "XXX,YYY,ZZ")
+        # self.until_entry.insert(-1, "YYYY-MM-DD")
+        # self.geocode_entry.insert(-1, "XXX,YYY,ZZ")
 
         # Make window appear again
         self.window.update()  # Update default or saved values
@@ -333,8 +335,21 @@ class ScraperWindow:
     def update_entries(self):
         """ Updates entries with default parameters """
 
+        self.size_entry.delete(0, END)
         self.until_entry.delete(0, END)
         self.until_entry.insert(0, date.today() - timedelta(days=7))
+
+        with open('data.json') as f:
+            data = json.load(f)
+
+        for item in data['last_research']:
+            if item['query'] != "": self.query_entry.insert(END, item['query'])
+            if item['save_path'] != "": self.save_path_entry.insert(END, item['save_path'])
+            if item['geocode'] != "": self.geocode_entry.insert(END, item['geocode'])
+            if item['number'] != 0: self.size_entry.insert(END, item['number'])
+            if item['until'] != "": self.until_entry.insert(END, item['until'])
+            if item['research_type'] != "": self.result_type_var = item['research_type']
+            if item['language'] != "": self.language.set(self.options[item['language']])
 
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
@@ -349,7 +364,7 @@ class ScraperWindow:
                                                 "not valid.\nDo you want to "
                                                 "proceed anyway ?\nDefault is "
                                                 "date is 7 days ago ")):
-                return False
+                return default
             else:
                 default[1] = True
 
@@ -361,7 +376,7 @@ class ScraperWindow:
                                                                            "radius+unit. Latitude is +- 90"
                                                                            " Longitude =- 180"
                                                                            " radius units : km, mi")):
-                return False
+                return default
             else:
                 default[2] = True
 
@@ -371,7 +386,7 @@ class ScraperWindow:
                                                                            "Do you still wish to "
                                                                            "proceed ? Default is "
                                                                            "10 ")):
-                return False
+                return default
             else:
                 default[3] = True
 
@@ -379,11 +394,11 @@ class ScraperWindow:
             messagebox.showerror(title="Invalid parameter", message="You must select a correct "
                                                                     "save "
                                                                     "directory")
-            return False
+            return default
 
         if not (self.validate_query()):
             messagebox.showerror(title="Invalid parameter", message="You must enter a query")
-            return False
+            return default
 
         default[0] = True
         return default
@@ -398,13 +413,16 @@ class ScraperWindow:
             query = self.query_entry.get("1.0", "end-1c")
             save_path = self.save_path_entry.get()
             res_type = self.result_type_var.get()
+            lan = get_dict_key(self.options, self.language.get())
 
-            num = self.size.get() if parameters[1] else ""
-            lan = get_dict_key(self.options, self.language.get()) if parameters[2] else ""
-            geo_code = self.geocode_entry.get() if parameters[3] else ""
+            date = self.until_entry.get() if parameters[1] else ""
+            geo_code = self.geocode_entry.get() if parameters[2] else ""
+            num = int(self.size_entry.get()) if parameters[3] else 10
+            # lan = get_dict_key(self.options, self.language.get()) if parameters[2] else ""
 
-            print(query, geo_code, num, lan, res_type, save_path)
-            test_api(query, save_path, geo_code, num, lan, res_type)
+            print(query, save_path, geo_code, num, date, lan, res_type)
+            test_api(query, save_path, geo_code, num, date, lan, res_type)
+            save_search_settings(query, save_path, geo_code, num, date, lan, res_type)
 
     def update_path(self):
         """ Update path entry with user choice """

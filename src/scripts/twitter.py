@@ -22,11 +22,12 @@ def json_dump(tweets, path, filename):
         json.dump(tweets, outfile, indent=4)
 
 
-def test_api(query, save_directory, geocode="", number=10, language="en", res_type="recent"):
+def test_api(query, save_directory, geocode="", number=10, until="", language="en",
+             res_type="recent"):
 
     api = auth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
-    tweets = tw.Cursor(api.search, q=query, geocode=geocode, lang=language,
+    tweets = tw.Cursor(api.search, q=query, geocode=geocode, lang=language, until=until,
                        result_type=res_type).items(
         number)
 
