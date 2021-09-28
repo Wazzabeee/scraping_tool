@@ -3,7 +3,6 @@ This module is the GUI for Twitter API
 @author : Clément Delteil
 """
 from datetime import date, datetime, timedelta
-from os import path
 from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text, \
     END
 from traceback import format_exc
@@ -17,17 +16,25 @@ import json
 class ScraperWindow:
     """ This class represents the twitter api window """
 
-    def __init__(self):
+    def __init__(self, master):
         """ Tkinter UI objects definitions """
 
-        self.window = Tk()
-
+        self.master = master
+        self.frame = ttk.Frame(self.master)
+        # self.quitButton = tk.Button(self.frame, text='Quit', width=25, command=self.close_windows)
+        # self.quitButton.pack()
+        # self.frame.pack()
+        # self.master.call("source", "../theme/sun-valley.tcl")
+        # self.master.call("set_theme", "dark")
+        # self.window = Tk()
         # Set window theme
-        self.window.tk.call("source", "../theme/sun-valley.tcl")
-        self.window.tk.call("set_theme", "dark")
+        # self.window.tk.call("source", "../theme/sun-valley.tcl")
+        # self.window.tk.call("set_theme", "dark")
 
-        self.window.withdraw()
-        self.window.title("Scraping tool")
+        self.master.withdraw()
+        self.master.title("Scraping tool")
+        # self.window.withdraw()
+        # self.window.title("Scraping tool")
 
         # Overwrite Tk callback exception to get message on the screen when error occures
         Tk.report_callback_exception = self.callback_error
@@ -39,7 +46,7 @@ class ScraperWindow:
         self.date = StringVar()
         self.save_type_var = IntVar(None, 1)
         self.size = IntVar()
-        self.result_type_var = StringVar()
+        self.result_type_var = StringVar(None, "mixed")
 
         # All languages options available
         self.options = {
@@ -51,16 +58,17 @@ class ScraperWindow:
 
         # Search type frame
         self.search_type_frame = ttk.Labelframe(
-            self.window,
+            # self.window,
+            self.master,
             text="Search type",
             borderwidth=1,
             padding="80 3 12 12"
         )
         self.form_frame = ttk.Labelframe(
-            self.window, text="Search form", borderwidth=1, padding="3 3 12 12"
+            self.master, text="Search form", borderwidth=1, padding="3 3 12 12"
         )
         self.save_frame = ttk.Labelframe(
-            self.window, text="Save", borderwidth=1, padding="3 3 12 12"
+            self.master, text="Save", borderwidth=1, padding="3 3 12 12"
         )
         self.result_type_frame = ttk.LabelFrame(self.form_frame, padding="5 0 3 8")
         self.save_type_frame = ttk.Labelframe(self.save_frame, padding="5 0 3 8")
@@ -143,7 +151,7 @@ class ScraperWindow:
             command=self.update_path,
         )
         self.search_button = ttk.Button(
-            self.window,
+            self.master,
             text="Search",
             style="Accent.TButton",
             command=self.search
@@ -184,10 +192,10 @@ class ScraperWindow:
         # self.geocode_entry.insert(-1, "XXX,YYY,ZZ")
 
         # Make window appear again
-        self.window.update()  # Update default or saved values
+        self.master.update()  # Update default or saved values
         self.center_window()  # Center the window on the screen
-        self.window.deiconify()
-        self.window.iconbitmap("../images/cobweb.ico")  # Add icon to window
+        self.master.deiconify()
+        self.master.iconbitmap("../images/cobweb.ico")  # Add icon to window
         self.bind_them()  # Bind events to objects
 
     def bind_them(self):
@@ -328,10 +336,10 @@ class ScraperWindow:
     def center_window(self):
         """ Centers the window on the screen based on screen size """
 
-        win_width, win_height = self.window.winfo_width(), self.window.winfo_height()
-        screen_width = int((self.window.winfo_screenwidth() - win_width) / 2)
-        screen_height = int((self.window.winfo_screenheight() - win_height) / 2)
-        self.window.geometry(f"{win_width}x{win_height}+{screen_width}+{screen_height}")
+        win_width, win_height = self.master.winfo_width(), self.master.winfo_height()
+        screen_width = int((self.master.winfo_screenwidth() - win_width) / 2)
+        screen_height = int((self.master.winfo_screenheight() - win_height) / 2)
+        self.master.geometry(f"{win_width}x{win_height}+{screen_width}+{screen_height}")
 
     def update_entries(self):
         """ Updates entries with default parameters """
@@ -449,4 +457,4 @@ class ScraperWindow:
         """ Display Tkinter window """
 
         self.update_entries()  # Updates entries with saved or default values
-        self.window.mainloop()
+        self.master.mainloop()
