@@ -339,17 +339,24 @@ class ScraperWindow:
         self.until_entry.delete(0, END)
         self.until_entry.insert(0, date.today() - timedelta(days=7))
 
-        with open('data.json') as f:
+        with open('../settings/data.json') as f:
             data = json.load(f)
 
         for item in data['last_research']:
-            if item['query'] != "": self.query_entry.insert(END, item['query'])
-            if item['save_path'] != "": self.save_path_entry.insert(END, item['save_path'])
-            if item['geocode'] != "": self.geocode_entry.insert(END, item['geocode'])
-            if item['number'] != 0: self.size_entry.insert(END, item['number'])
-            if item['until'] != "": self.until_entry.insert(END, item['until'])
-            if item['research_type'] != "": self.result_type_var = item['research_type']
-            if item['language'] != "": self.language.set(self.options[item['language']])
+            if item['query'] != "":
+                self.query_entry.insert(END, item['query'])
+            if item['save_path'] != "":
+                self.save_path_entry.insert(END, item['save_path'])
+            if item['geocode'] != "":
+                self.geocode_entry.insert(END, item['geocode'])
+            if item['number'] != 0:
+                self.size_entry.insert(END, item['number'])
+            if item['until'] != "":
+                self.until_entry.insert(END, item['until'])
+            if item['research_type'] != "":
+                self.result_type_var = item['research_type']
+            if item['language'] != "":
+                self.language.set(self.options[item['language']])
 
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
@@ -415,12 +422,11 @@ class ScraperWindow:
             res_type = self.result_type_var.get()
             lan = get_dict_key(self.options, self.language.get())
 
-            date = self.until_entry.get() if parameters[1] else ""
+            until = self.until_entry.get() if parameters[1] else ""
             geo_code = self.geocode_entry.get() if parameters[2] else ""
             num = int(self.size_entry.get()) if parameters[3] else 10
-            # lan = get_dict_key(self.options, self.language.get()) if parameters[2] else ""
 
-            print(query, save_path, geo_code, num, date, lan, res_type)
+            print(query, save_path, geo_code, num, until, lan, res_type)
             test_api(query, save_path, geo_code, num, date, lan, res_type)
             save_search_settings(query, save_path, geo_code, num, date, lan, res_type)
 
