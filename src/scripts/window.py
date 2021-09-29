@@ -7,7 +7,7 @@ from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E,
     END
 from traceback import format_exc
 from os import path
-from twitter import test_api
+from twitter import test_api, retrieve_tweets_from_users_list
 from utils import get_dict_key, separate_int_string
 from data import save_search_settings
 import json
@@ -20,25 +20,20 @@ class ScraperWindow:
         """ Tkinter UI objects definitions """
 
         self.master = master
-        self.frame = ttk.Frame(self.master)
-        # self.quitButton = tk.Button(self.frame, text='Quit', width=25, command=self.close_windows)
-        # self.quitButton.pack()
-        # self.frame.pack()
-        # self.master.call("source", "../theme/sun-valley.tcl")
-        # self.master.call("set_theme", "dark")
-        # self.window = Tk()
-        # Set window theme
-        # self.window.tk.call("source", "../theme/sun-valley.tcl")
-        # self.window.tk.call("set_theme", "dark")
+        self.tab_control = ttk.Notebook(self.master)
+        self.frame = ttk.Frame(self.tab_control)
+        self.user_frame = ttk.Frame(self.tab_control)
+        self.tab_control.add(self.frame, text="Search")
+        self.tab_control.add(self.user_frame, text="User")
+        self.tab_control.grid(row=0, column=0, sticky=N+S+W+E)
 
         self.master.withdraw()
         self.master.title("Scraping tool")
-        # self.window.withdraw()
-        # self.window.title("Scraping tool")
 
         # Overwrite Tk callback exception to get message on the screen when error occures
         Tk.report_callback_exception = self.callback_error
 
+        """ Search tab UI components"""
         # All variables linked to user choices
         self.search_type_var = IntVar(None, 1)
         self.language = StringVar()
@@ -59,16 +54,16 @@ class ScraperWindow:
         # Search type frame
         self.search_type_frame = ttk.Labelframe(
             # self.window,
-            self.master,
+            self.frame,
             text="Search type",
             borderwidth=1,
             padding="80 3 12 12"
         )
         self.form_frame = ttk.Labelframe(
-            self.master, text="Search form", borderwidth=1, padding="3 3 12 12"
+            self.frame, text="Search form", borderwidth=1, padding="3 3 12 12"
         )
         self.save_frame = ttk.Labelframe(
-            self.master, text="Save", borderwidth=1, padding="3 3 12 12"
+            self.frame, text="Save", borderwidth=1, padding="3 3 12 12"
         )
         self.result_type_frame = ttk.LabelFrame(self.form_frame, padding="5 0 3 8")
         self.save_type_frame = ttk.Labelframe(self.save_frame, padding="5 0 3 8")
@@ -151,7 +146,7 @@ class ScraperWindow:
             command=self.update_path,
         )
         self.search_button = ttk.Button(
-            self.master,
+            self.frame,
             text="Search",
             style="Accent.TButton",
             command=self.search
@@ -187,6 +182,97 @@ class ScraperWindow:
         self.json_check.pack(expand=True, side=LEFT)
         self.csv_check.pack(expand=True, side=LEFT)
 
+        """ User tab UI elements """
+        self.import_user_frame = ttk.Labelframe(
+            self.user_frame,
+            text="Import users list",
+            borderwidth=1,
+            padding="3 3 12 12"
+        )
+
+        self.parameters_frame = ttk.Labelframe(
+            self.user_frame,
+            text="True/False parameters",
+            borderwidth=1,
+            padding="110 3 12 12"
+        )
+
+        self.entries_frame = ttk.LabelFrame(
+            self.user_frame,
+            text="Optional entries",
+            borderwidth=1,
+            padding="3 3 12 12 "
+        )
+
+        self.browse_button2 = ttk.Button(
+            self.import_user_frame,
+            text="Browse",
+            style="Accent.TButton"
+        )
+
+        self.search_button2 = ttk.Button(
+            self.user_frame,
+            text="Search",
+            style="Accent.TButton",
+        )
+
+        self.include_rt = IntVar()
+        self.exclude_replies = IntVar()
+        self.trim_user = IntVar()
+        self.count = IntVar()
+        self.since_id = StringVar()
+        self.until_id = StringVar()
+
+        self.include_rt_button = ttk.Checkbutton(
+            self.parameters_frame,
+            text="Include RT",
+            variable=self.include_rt,
+            onvalue=1,
+            offvalue=0
+        )
+
+        self.exclude_replies_button = ttk.Checkbutton(
+            self.parameters_frame,
+            text="Exclude replies",
+            variable=self.exclude_replies,
+            onvalue=1,
+            offvalue=0
+        )
+
+        self.trim_user_button = ttk.Checkbutton(
+            self.parameters_frame,
+            text="Only user ID",
+            variable=self.trim_user,
+            onvalue=1,
+            offvalue=0
+        )
+
+        self.since_id_entry = ttk.Entry(self.entries_frame, textvariable=self.since_id)
+        self.until_id_entry = ttk.Entry(self.entries_frame, textvariable=self.until_id)
+        self.count_entry = ttk.Entry(self.entries_frame, textvariable=self.count)
+        self.since_id_label = ttk.Label(self.entries_frame, text="Since ID")
+        self.until_id_label = ttk.Label(self.entries_frame, text="Until ID")
+        self.count_label = ttk.Label(self.entries_frame, text="Number of results per page")
+
+        self.import_user_path_label = ttk.Label(self.import_user_frame, text="Users list")
+        self.import_user_path_entry = ttk.Entry(self.import_user_frame, text="", width=55)
+        self.import_user_path_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        self.import_user_path_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
+        self.browse_button2.grid(row=0, column=2, sticky=W, padx=5, pady=5)
+        self.include_rt_button.grid(row=0, column=0, sticky=N, padx=5, pady=5)
+        self.exclude_replies_button.grid(row=0, column=1, sticky=N, padx=5, pady=5)
+        self.trim_user_button.grid(row=0, column=2, sticky=N, padx=5, pady=5)
+        self.count_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        self.count_entry.grid(row=1, column=1, sticky=W, padx=5, pady=5)
+        self.since_id_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        self.since_id_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
+        self.until_id_label.grid(row=0, column=2, sticky=W, padx=5, pady=5)
+        self.until_id_entry.grid(row=0, column=3, sticky=W, padx=5, pady=5)
+        self.import_user_frame.grid(column=0, row=0, sticky=(N, W, E, S), padx=10, pady=10)
+        self.parameters_frame.grid(column=0, row=1, sticky=(N, W, E, S), padx=10, pady=10)
+        self.entries_frame.grid(column=0, row=2, sticky=(N, W, E, S), padx=10, pady=10)
+        self.search_button2.grid(column=0, row=3, sticky=N, padx=5, pady=5)
+
         # Make window appear again
         self.master.update()  # Update default or saved values
         self.center_window()  # Center the window on the screen
@@ -194,6 +280,8 @@ class ScraperWindow:
         self.master.iconbitmap("../images/cobweb.ico")  # Add icon to window
         self.bind_them()  # Bind events to objects
         self.update_entries()
+
+        # retrieve_tweets_from_users_list("Wazzabeee_")
 
     def bind_them(self):
         """ This method binds events to Tkinter objects """
