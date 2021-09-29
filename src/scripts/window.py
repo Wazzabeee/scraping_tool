@@ -371,61 +371,65 @@ class ScraperWindow:
 
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
-
+        until, size, geocode = False, False, False
+        print(self.validate_date(), self.validate_geocode(), self.validate_int())
         default = [False, False, False, False]
 
-        if not (self.validate_date()):
-            if not (
-                    messagebox.askyesno(title="Invalid parameter",
+        if not (self.validate_date()):  # if date is not valid
+            # if user answers no we break
+            if not (messagebox.askyesno(title="Invalid parameter",
                                         message="The date you've entered "
                                                 "is "
                                                 "not valid.\nDo you want to "
                                                 "proceed anyway ?\nDefault is "
                                                 "date is 7 days ago ")):
-                return default
-            else:
-                default[1] = True
+                return [False]
+            else:  # user answers yes we use default value
+                until = False
+        else:
+            until = True
 
         if not (self.validate_geocode()):
             if not (messagebox.askyesno(title="Invalid parameter", message="The geocode you've "
                                                                            "entered "
-                                                                           "is not valid. Good format is : 32,55,20km"
-                                                                           " lattiude,longitude,"
-                                                                           "radius+unit. Latitude is +- 90"
-                                                                           " Longitude =- 180"
-                                                                           " radius units : km, mi")):
-                return default
+                                                                           "is not valid."
+                                        "Do you want to proceed anyway ?")):
+                return [False]
             else:
-                default[2] = True
+                geocode = False
+        else:
+            geocode = True
 
         if not (self.validate_int()):
             if not (messagebox.askyesno(title="Invalid parameter", message="You must select a "
                                                                            "positive int number. "
-                                                                           "Do you still wish to "
-                                                                           "proceed ? Default is "
-                                                                           "10 ")):
-                return default
+                                                                           "Default is 10. Do you"
+                                                                           "want to proceed "
+                                                                           "anyway ?")):
+                return [False]
             else:
-                default[3] = True
+                size = False
+        else:
+            size = True
 
         if not (self.validate_path()):
             messagebox.showerror(title="Invalid parameter", message="You must select a correct "
                                                                     "save "
                                                                     "directory")
-            return default
+            return [False]
 
         if not (self.validate_query()):
             messagebox.showerror(title="Invalid parameter", message="You must enter a query")
-            return default
+            return [False]
 
-        default[0] = True
-        return default
+        return [True, geocode, until, size]
 
     def search(self):
         """ Send search parameters to API bridge """
 
         # only query is mandatory parameter
         parameters = self.parameters_verification()
+        print(parameters)
 
         if parameters[0]:
             query = self.query_entry.get("1.0", "end-1c")
@@ -433,8 +437,8 @@ class ScraperWindow:
             res_type = self.result_type_var.get()
             lan = get_dict_key(self.options, self.language.get())
 
-            until = self.until_entry.get() if parameters[1] else ""
-            geo_code = self.geocode_entry.get() if parameters[2] else ""
+            geo_code = self.geocode_entry.get() if parameters[1] else ""
+            until = self.until_entry.get() if parameters[2] else ""
             num = int(self.size_entry.get()) if parameters[3] else 10
 
             print(query, save_path, geo_code, num, until, lan, res_type)

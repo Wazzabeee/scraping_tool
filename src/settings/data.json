@@ -1,11 +1,11 @@
 {
     "last_research": [
         {
-            "query": "sous-marins -filter:retweets",
+            "query": "crous",
             "save_path": "C:/Users/Cl\u00e9ment/Documents/GitHub/scraping_tool/output",
             "geocode": "",
-            "number": 10,
-            "until": "",
+            "number": 5,
+            "until": "2021-09-22",
             "language": "fr",
             "research_type": "mixed"
         }

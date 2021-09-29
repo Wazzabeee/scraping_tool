@@ -7,7 +7,7 @@ import json
 def auth(consumer_key, consumer_secret, access_token, access_token_secret):
     authentification = tw.OAuthHandler(consumer_key, consumer_secret)
     authentification.set_access_token(access_token, access_token_secret)
-    return tw.API(authentification, wait_on_rate_limit=True)
+    return tw.API(authentification, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 
 def format_file_name(number, language, res_type):
