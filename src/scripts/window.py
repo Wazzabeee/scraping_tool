@@ -187,16 +187,13 @@ class ScraperWindow:
         self.json_check.pack(expand=True, side=LEFT)
         self.csv_check.pack(expand=True, side=LEFT)
 
-        # Insert format values
-        # self.until_entry.insert(-1, "YYYY-MM-DD")
-        # self.geocode_entry.insert(-1, "XXX,YYY,ZZ")
-
         # Make window appear again
         self.master.update()  # Update default or saved values
         self.center_window()  # Center the window on the screen
         self.master.deiconify()
         self.master.iconbitmap("../images/cobweb.ico")  # Add icon to window
         self.bind_them()  # Bind events to objects
+        self.update_entries()
 
     def bind_them(self):
         """ This method binds events to Tkinter objects """
@@ -345,11 +342,8 @@ class ScraperWindow:
         """ Updates entries with default parameters """
 
         self.size_entry.delete(0, END)
-        self.until_entry.delete(0, END)
-        self.until_entry.insert(0, date.today() - timedelta(days=7))
 
         if path.exists('../settings/data.json'):
-
             with open('../settings/data.json') as f:
                 data = json.load(f)
 
@@ -364,6 +358,9 @@ class ScraperWindow:
                     self.size_entry.insert(END, item['number'])
                 if item['until'] != "":
                     self.until_entry.insert(END, item['until'])
+                else:
+                    self.until_entry.insert(0, date.today() - timedelta(days=7))
+
                 if item['research_type'] != "":
                     self.result_type_var.set(item['research_type'])
                 if item['language'] != "":
