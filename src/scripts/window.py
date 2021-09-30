@@ -11,6 +11,7 @@ from twitter import test_api, retrieve_tweets_from_users_list
 from utils import get_dict_key, separate_int_string
 from data import save_search_settings
 import json
+import csv
 
 
 class ScraperWindow:
@@ -143,7 +144,7 @@ class ScraperWindow:
             self.save_frame,
             text="Browse",
             style="Accent.TButton",
-            command=self.update_path,
+            command=lambda: self.update_path(True),
         )
         self.search_button = ttk.Button(
             self.frame,
@@ -207,13 +208,15 @@ class ScraperWindow:
         self.browse_button2 = ttk.Button(
             self.import_user_frame,
             text="Browse",
-            style="Accent.TButton"
+            style="Accent.TButton",
+            command=lambda: self.update_path(False)
         )
 
         self.search_button2 = ttk.Button(
             self.user_frame,
             text="Search",
             style="Accent.TButton",
+            command=self.user_search
         )
 
         self.include_rt = IntVar()
@@ -281,8 +284,6 @@ class ScraperWindow:
         self.bind_them()  # Bind events to objects
         self.update_entries()
 
-        # retrieve_tweets_from_users_list("Wazzabeee_")
-
     def bind_them(self):
         """ This method binds events to Tkinter objects """
 
@@ -314,7 +315,9 @@ class ScraperWindow:
                 geocode = self.geocode_entry.get()
                 lat, long, rad = geocode.split(",")
                 if not (lat == "" or long == "" or rad == ""):
-                    if -90 <= int(lat) <= 90 and -180 <= int(long) <= 180:
+                    lat.replace('.', ',')
+                    long.replace('.', ',')
+                    if -90 <= float(lat) <= 90 and -180 <= float(long) <= 180:
                         radius, unit = separate_int_string(rad)
                         if radius.isnumeric() and (str(unit) == "km" or str(unit) == "mi"):
                             self.geocode_entry.state(["!invalid"])
@@ -334,7 +337,7 @@ class ScraperWindow:
                 return False
 
     def validate_date(self, *_):
-        """ This method invalidates the entry if its content is not an valid date """
+        """ This method invalidates the entry if its content is not a valid date """
 
         if self.until_entry.get() == "":
             self.until_entry.state(["invalid"])
@@ -456,9 +459,8 @@ class ScraperWindow:
 
     def parameters_verification(self):
         """ Verifies that all mandatory parameters are filled """
+
         until, size, geocode = False, False, False
-        print(self.validate_date(), self.validate_geocode(), self.validate_int())
-        default = [False, False, False, False]
 
         if not (self.validate_date()):  # if date is not valid
             # if user answers no we break
@@ -509,24 +511,74 @@ class ScraperWindow:
 
         return [True, geocode, until, size]
 
+    def user_parameters_verification(self):
+
+        if self.import_user_path_entry.get() != "":
+            _, extension = path.splitext(self.import_user_path_entry.get())
+            if extension == ".csv":
+                try:
+                    res = int(self.count.get()) >= 0
+                    if not res:
+                        messagebox.showinfo(title="Error", message="Count must be greater or "
+                                                                   "equal than 0")
+                    else:
+                        return True
+                except ValueError:
+                    messagebox.showinfo(title="Error", message="Count must be greater or equal "
+                                                               "than 0")
+                    return False
+            else:
+                messagebox.showinfo(title="File extension error", message="You must select a CSV "
+                                                                          "file")
+        else:
+            messagebox.showinfo(title="Missing CSV file", message="You must select a CSV file")
+
+        return False
+
+    def user_search(self):
+
+        if self.user_parameters_verification():
+            count = None
+            names = []
+            with open(self.import_user_path_entry.get(), newline="") as f:
+                for row in csv.reader(f):
+                    names.append(row[0])
+
+            print(names)
+            if len(names) >= 1:
+                exclude_replies = True if self.exclude_replies.get() else False
+                include_rt = True if self.include_rt.get() else False
+                only_userid = True if self.trim_user.get() else False
+                count = self.count.get() if self.count_entry.get() != 0 else None
+                sinceid = str(self.since_id.get()) if str(self.since_id.get()) != "" else None
+                untilid = str(self.until_id.get()) if str(self.until_id.get()) != "" else None
+
+                print(exclude_replies, include_rt, only_userid, count, sinceid, untilid)
+                retrieve_tweets_from_users_list(names, self.save_path_entry.get(),
+                                                since_id=sinceid,
+                                                count=count,
+                                                max_id=untilid,
+                                                trim_user=only_userid,
+                                                exclude_replies=exclude_replies,
+                                                include_rts=include_rt)
+
     def search(self):
         """ Send search parameters to API bridge """
 
-        # only query is mandatory parameter
         parameters = self.parameters_verification()
-        print(parameters)
 
         if parameters[0]:
+            # We retrieve mandatory parameters
             query = self.query_entry.get("1.0", "end-1c")
             save_path = self.save_path_entry.get()
             res_type = self.result_type_var.get()
             lan = get_dict_key(self.options, self.language.get())
 
+            # We retrieve optional parameters
             geo_code = self.geocode_entry.get() if parameters[1] else ""
             until = self.until_entry.get() if parameters[2] else ""
             num = int(self.size_entry.get()) if parameters[3] else 10
 
-            print(query, save_path, geo_code, num, until, lan, res_type)
             if test_api(query, save_path, geo_code, num, until, lan, res_type):
                 save_search_settings(query, save_path, geo_code, num, until, lan, res_type)
                 messagebox.showinfo(title="Success", message="The results have been saved to the "
@@ -535,12 +587,17 @@ class ScraperWindow:
                 messagebox.showerror(titl="Error", message="Something wrong happenned. Pleae "
                                                            "check API status or query format.")
 
-    def update_path(self):
+    def update_path(self, first_tab):
         """ Update path entry with user choice """
 
-        save_path = filedialog.askdirectory()
-        self.save_path_entry.delete(0, END)  # Remove current text in entry
-        self.save_path_entry.insert(0, save_path)  # Insert the 'path'
+        if first_tab:
+            save_path = filedialog.askdirectory()
+            self.save_path_entry.delete(0, END)  # Remove current text in entry
+            self.save_path_entry.insert(0, save_path)  # Insert the 'path'
+        else:
+            save_path = filedialog.askopenfilename()
+            self.import_user_path_entry.delete(0, END)
+            self.import_user_path_entry.insert(0, save_path)
 
     def start(self):
         """ Display Tkinter window """

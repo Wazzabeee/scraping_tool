@@ -1,4 +1,4 @@
-import json
+from json import dump
 
 
 def save_search_settings(query, save_path, geo_code, num, date, lan, res_type):
@@ -14,6 +14,6 @@ def save_search_settings(query, save_path, geo_code, num, date, lan, res_type):
     })
 
     with open('../settings/data.json', 'w') as f:
-        json.dump(research_data, f, indent=4)
+        dump(research_data, f, indent=4)
 
     print('settings saved')
