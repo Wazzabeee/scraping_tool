@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import PhotoImage, ttk
+from tkinter import ttk
 from window import ScraperWindow
 from PIL import Image, ImageTk
 

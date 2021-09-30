@@ -7,7 +7,7 @@ from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E,
     END
 from traceback import format_exc
 from os import path
-from twitter import test_api, retrieve_tweets_from_users_list
+from twitter import api_search, retrieve_tweets_from_users_list
 from utils import get_dict_key, separate_int_string
 from data import save_search_settings
 import json
@@ -34,7 +34,7 @@ class ScraperWindow:
         # Overwrite Tk callback exception to get message on the screen when error occures
         Tk.report_callback_exception = self.callback_error
 
-        """ Search tab UI components"""
+        """ Search tab UI components """
         # All variables linked to user choices
         self.search_type_var = IntVar(None, 1)
         self.language = StringVar()
@@ -153,6 +153,7 @@ class ScraperWindow:
             command=self.search
         )
 
+        # Placement of search tab UI components
         self.search_type_frame.grid(column=0, row=0, sticky=(N, W, E, S), padx=10, pady=10)
         self.seven_day_check.grid(row=1, column=1, sticky=S, padx=10, pady=10)
         self.thirty_day_check.grid(row=1, column=2, sticky=S, padx=10, pady=10)
@@ -219,6 +220,7 @@ class ScraperWindow:
             command=self.user_search
         )
 
+        # Variables linked to user tab components
         self.include_rt = IntVar()
         self.exclude_replies = IntVar()
         self.trim_user = IntVar()
@@ -256,9 +258,10 @@ class ScraperWindow:
         self.since_id_label = ttk.Label(self.entries_frame, text="Since ID")
         self.until_id_label = ttk.Label(self.entries_frame, text="Until ID")
         self.count_label = ttk.Label(self.entries_frame, text="Number of results per page")
-
         self.import_user_path_label = ttk.Label(self.import_user_frame, text="Users list")
         self.import_user_path_entry = ttk.Entry(self.import_user_frame, text="", width=55)
+
+        # Placement of user tab UI components
         self.import_user_path_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.import_user_path_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
         self.browse_button2.grid(row=0, column=2, sticky=W, padx=5, pady=5)
@@ -458,7 +461,7 @@ class ScraperWindow:
                     self.language.set(self.options[item['language']])
 
     def parameters_verification(self):
-        """ Verifies that all mandatory parameters are filled """
+        """ Verifies that all mandatory parameters fron search tab form are filled """
 
         until, size, geocode = False, False, False
 
@@ -512,6 +515,7 @@ class ScraperWindow:
         return [True, geocode, until, size]
 
     def user_parameters_verification(self):
+        """ Verifies that all mandatory parameters fron user tab form are filled """
 
         if self.import_user_path_entry.get() != "":
             _, extension = path.splitext(self.import_user_path_entry.get())
@@ -536,16 +540,20 @@ class ScraperWindow:
         return False
 
     def user_search(self):
+        """ Sends user search parameters to API """
 
+        # We check if all mandatory parameters are filled
         if self.user_parameters_verification():
             count = None
             names = []
-            with open(self.import_user_path_entry.get(), newline="") as f:
-                for row in csv.reader(f):
+            with open(self.import_user_path_entry.get(), newline="") as user_file:
+                for row in csv.reader(user_file):
                     names.append(row[0])
 
             print(names)
-            if len(names) >= 1:
+            if len(names) >= 1:  # if file is not empty
+
+                # We retrieve all form's values
                 exclude_replies = True if self.exclude_replies.get() else False
                 include_rt = True if self.include_rt.get() else False
                 only_userid = True if self.trim_user.get() else False
@@ -554,6 +562,7 @@ class ScraperWindow:
                 untilid = str(self.until_id.get()) if str(self.until_id.get()) != "" else None
 
                 print(exclude_replies, include_rt, only_userid, count, sinceid, untilid)
+                # Launches research
                 retrieve_tweets_from_users_list(names, self.save_path_entry.get(),
                                                 since_id=sinceid,
                                                 count=count,
@@ -563,7 +572,7 @@ class ScraperWindow:
                                                 include_rts=include_rt)
 
     def search(self):
-        """ Send search parameters to API bridge """
+        """ Sends search parameters to API bridge """
 
         parameters = self.parameters_verification()
 
@@ -579,7 +588,7 @@ class ScraperWindow:
             until = self.until_entry.get() if parameters[2] else ""
             num = int(self.size_entry.get()) if parameters[3] else 10
 
-            if test_api(query, save_path, geo_code, num, until, lan, res_type):
+            if api_search(query, save_path, geo_code, num, until, lan, res_type):
                 save_search_settings(query, save_path, geo_code, num, until, lan, res_type)
                 messagebox.showinfo(title="Success", message="The results have been saved to the "
                                                              "specified location.")
@@ -588,7 +597,7 @@ class ScraperWindow:
                                                            "check API status or query format.")
 
     def update_path(self, first_tab):
-        """ Update path entry with user choice """
+        """ Updates path entry with user choice """
 
         if first_tab:
             save_path = filedialog.askdirectory()
@@ -600,7 +609,7 @@ class ScraperWindow:
             self.import_user_path_entry.insert(0, save_path)
 
     def start(self):
-        """ Display Tkinter window """
+        """ Displays Tkinter window """
 
         self.update_entries()  # Updates entries with saved or default values
         self.master.mainloop()

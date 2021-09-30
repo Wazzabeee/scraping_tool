@@ -10,18 +10,23 @@ def auth(consumer_key, consumer_secret, access_token, access_token_secret):
     return tw.API(authentification, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 
-def get_search_filename(number, language, res_type):
-    return datetime.now().strftime("%b-%d-%Y_%H%M%S") + '_' + str(number) + '_' + language + '_' + res_type
-
-
 def save_to_json(tweets, path, filename):
     print('results saved in :' + path + '/' + filename + '.json')
     with open(path + '/' + filename + '.json', 'w') as outfile:
         json.dump(tweets, outfile, indent=4)
 
 
-def test_api(query, save_directory, geocode="", number=10, until="", language="en",
-             res_type="recent"):
+def get_user_filename(user, count):
+    return datetime.now().strftime("%b-%d-%Y_%H%M%S") + '_' + user + '_' + str(count)
+
+
+def get_search_filename(number, language, res_type):
+    return datetime.now().strftime("%b-%d-%Y_%H%M%S") + '_' + str(number) + '_' + language \
+           + '_' + res_type
+
+
+def api_search(query, save_directory, geocode="", number=10, until="", language="en",
+               res_type="recent"):
     api = auth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
     dict_tweets = {'tweets': []}
@@ -57,13 +62,9 @@ def retrieve_tweets_from_users_list(users_list, path, since_id=None, count=None,
             tweet_count += 1
             dict_tweets['tweets'].append(status._json)
             # if status.created_at < end_date:
-                # break
+            # break
 
         print('' + str(tweet_count) + ' tweets retrieved fron ' + user)
 
         filename = get_user_filename(user, tweet_count)
         save_to_json(dict_tweets, path, filename)
-
-
-def get_user_filename(user, count):
-    return datetime.now().strftime("%b-%d-%Y_%H%M%S") + '_' + user + '_' + str(count)
