@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 
 def get_dict_key(dictionnary, value):
     for key, val in dictionnary.items():
@@ -15,3 +17,20 @@ def separate_int_string(string):
         return string, ""
     else:
         return "0", ""
+
+
+def validate_date_format(string):
+    if string is None or string == "":
+        return True
+    else:
+        try:
+            datetime.strptime(string, '%Y-%m-%d')
+
+            if datetime.strptime(string, '%Y-%m-%d') <= (datetime.today() -
+                                                         timedelta(days=8)):
+                return False
+            else:
+                return True
+
+        except ValueError:
+            return False

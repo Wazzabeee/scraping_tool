@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-from window import ScraperWindow
+
 from PIL import Image, ImageTk
+
+from window import ScraperWindow
 
 
 class Menu:
@@ -27,13 +29,12 @@ class Menu:
         self.real_twitter = ImageTk.PhotoImage(resized)
         self.twitter_button = tk.Button(self.frame, text="Click me", width=60, height=60,
                                         image=self.real_twitter,
-                                        command=self.twitter_window)
+                                        command=self.twitter_window())
         self.twitter_button["bg"] = "black"
         self.twitter_button["border"] = "0"
         self.twitter_button.grid(row=0, column=1)
 
         self.frame.pack()
-
         self.master.update()
         self.center_window()
 

@@ -1,5 +1,6 @@
-from menu import Menu
 from tkinter import Tk
+
+from menu import Menu
 
 
 def main():

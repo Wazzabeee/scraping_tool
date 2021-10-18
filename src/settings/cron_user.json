@@ -1,0 +1,14 @@
+{
+    "settings": [
+        {
+            "users": "C:\\Users\\Cl\u00e9ment\\Desktop\\users.csv",
+            "save_path": "C:/Users/Cl\u00e9ment/Documents/GitHub/scraping_tool/output",
+            "since": "2021-10-12",
+            "until": "2020-10-12",
+            "count": "",
+            "trim_user": "True",
+            "exclude_replies": "True",
+            "include_rts": "False"
+        }
+    ]
+}

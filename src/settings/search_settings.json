@@ -1,12 +1,12 @@
 {
-    "last_research": [
+    "query_research": [
         {
-            "query": "crous",
+            "query": "#twitter",
             "save_path": "C:/Users/Cl\u00e9ment/Documents/GitHub/scraping_tool/output",
             "geocode": "",
-            "number": 5,
-            "until": "2021-09-23",
-            "language": "fr",
+            "number": 10,
+            "until": "",
+            "language": "en",
             "research_type": "mixed"
         }
     ]

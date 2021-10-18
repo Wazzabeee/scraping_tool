@@ -2,16 +2,17 @@
 This module is the GUI for Twitter API
 @author : Clément Delteil
 """
+import csv
+import json
 from datetime import date, datetime, timedelta
+from os import path, getcwd
 from tkinter import Tk, ttk, filedialog, messagebox, IntVar, StringVar, N, S, E, W, LEFT, Text, \
     END
 from traceback import format_exc
-from os import path
+
+from data import save_search_settings, save_user_settings
 from twitter import api_search, retrieve_tweets_from_users_list
-from utils import get_dict_key, separate_int_string
-from data import save_search_settings
-import json
-import csv
+from utils import get_dict_key, separate_int_string, validate_date_format
 
 
 class ScraperWindow:
@@ -26,7 +27,7 @@ class ScraperWindow:
         self.user_frame = ttk.Frame(self.tab_control)
         self.tab_control.add(self.frame, text="Search")
         self.tab_control.add(self.user_frame, text="User")
-        self.tab_control.grid(row=0, column=0, sticky=N+S+W+E)
+        self.tab_control.grid(row=0, column=0, sticky=N + S + W + E)
 
         self.master.withdraw()
         self.master.title("Scraping tool")
@@ -144,7 +145,7 @@ class ScraperWindow:
             self.save_frame,
             text="Browse",
             style="Accent.TButton",
-            command=lambda: self.update_path(True),
+            command=lambda: self.update_path("first"),
         )
         self.search_button = ttk.Button(
             self.frame,
@@ -206,11 +207,25 @@ class ScraperWindow:
             padding="3 3 12 12 "
         )
 
+        self.save_frame2 = ttk.Labelframe(
+            self.user_frame,
+            text="Save",
+            borderwidth=1,
+            padding="3 3 12 12"
+        )
+
         self.browse_button2 = ttk.Button(
             self.import_user_frame,
             text="Browse",
             style="Accent.TButton",
-            command=lambda: self.update_path(False)
+            command=lambda: self.update_path("second")
+        )
+
+        self.browse_button3 = ttk.Button(
+            self.save_frame2,
+            text="Browse",
+            style="Accent.TButton",
+            command=lambda: self.update_path("third")
         )
 
         self.search_button2 = ttk.Button(
@@ -225,8 +240,8 @@ class ScraperWindow:
         self.exclude_replies = IntVar()
         self.trim_user = IntVar()
         self.count = IntVar()
-        self.since_id = StringVar()
-        self.until_id = StringVar()
+        self.since_date = StringVar()
+        self.until_date = StringVar()
 
         self.include_rt_button = ttk.Checkbutton(
             self.parameters_frame,
@@ -251,12 +266,13 @@ class ScraperWindow:
             onvalue=1,
             offvalue=0
         )
-
-        self.since_id_entry = ttk.Entry(self.entries_frame, textvariable=self.since_id)
-        self.until_id_entry = ttk.Entry(self.entries_frame, textvariable=self.until_id)
+        self.save_path_label2 = ttk.Label(self.save_frame2, text="Save directory")
+        self.save_path_entry2 = ttk.Entry(self.save_frame2, text="", width=55)
+        self.since_date_entry = ttk.Entry(self.entries_frame, textvariable=self.since_date)
+        self.until_date_entry = ttk.Entry(self.entries_frame, textvariable=self.until_date)
         self.count_entry = ttk.Entry(self.entries_frame, textvariable=self.count)
-        self.since_id_label = ttk.Label(self.entries_frame, text="Since ID")
-        self.until_id_label = ttk.Label(self.entries_frame, text="Until ID")
+        self.since_date_label = ttk.Label(self.entries_frame, text="Since")
+        self.until_date_label = ttk.Label(self.entries_frame, text="Until")
         self.count_label = ttk.Label(self.entries_frame, text="Number of results per page")
         self.import_user_path_label = ttk.Label(self.import_user_frame, text="Users list")
         self.import_user_path_entry = ttk.Entry(self.import_user_frame, text="", width=55)
@@ -270,14 +286,18 @@ class ScraperWindow:
         self.trim_user_button.grid(row=0, column=2, sticky=N, padx=5, pady=5)
         self.count_label.grid(row=1, column=0, sticky=W, padx=5, pady=5)
         self.count_entry.grid(row=1, column=1, sticky=W, padx=5, pady=5)
-        self.since_id_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.since_id_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
-        self.until_id_label.grid(row=0, column=2, sticky=W, padx=5, pady=5)
-        self.until_id_entry.grid(row=0, column=3, sticky=W, padx=5, pady=5)
+        self.since_date_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        self.since_date_entry.grid(row=0, column=1, sticky=W, padx=5, pady=5)
+        self.until_date_label.grid(row=0, column=2, sticky=W, padx=5, pady=5)
+        self.until_date_entry.grid(row=0, column=3, sticky=W, padx=5, pady=5)
         self.import_user_frame.grid(column=0, row=0, sticky=(N, W, E, S), padx=10, pady=10)
         self.parameters_frame.grid(column=0, row=1, sticky=(N, W, E, S), padx=10, pady=10)
         self.entries_frame.grid(column=0, row=2, sticky=(N, W, E, S), padx=10, pady=10)
-        self.search_button2.grid(column=0, row=3, sticky=N, padx=5, pady=5)
+        self.save_frame2.grid(column=0, row=3, sticky=(N, W, E, S), padx=10, pady=10)
+        self.save_path_label2.grid(column=0, row=3, sticky=W, padx=5, pady=5)
+        self.save_path_entry2.grid(column=1, row=3, sticky=W, padx=5, pady=5)
+        self.browse_button3.grid(column=2, row=3, sticky=W, padx=5, pady=5)
+        self.search_button2.grid(column=0, row=4, sticky=N, padx=5, pady=5)
 
         # Make window appear again
         self.master.update()  # Update default or saved values
@@ -383,6 +403,7 @@ class ScraperWindow:
 
     def validate_query(self, *_):
         """ This method invalidates the entry if the query is empty """
+
         if self.query_entry.get("1.0", "end-1c") == "":
             return False
         else:
@@ -437,11 +458,11 @@ class ScraperWindow:
 
         self.size_entry.delete(0, END)
 
-        if path.exists('../settings/data.json'):
-            with open('../settings/data.json') as f:
+        if path.exists('../settings/search_settings.json'):
+            with open('../settings/search_settings.json') as f:
                 data = json.load(f)
 
-            for item in data['last_research']:
+            for item in data['query_research']:
                 if item['query'] != "":
                     self.query_entry.insert(END, item['query'])
                 if item['save_path'] != "":
@@ -460,6 +481,31 @@ class ScraperWindow:
                 if item['language'] != "":
                     self.language.set(self.options[item['language']])
 
+        if path.exists('../settings/user_settings.json'):
+            with open('../settings/user_settings.json') as f:
+                data = json.load(f)
+
+            for item in data['user_research']:
+                if item['users_lists'] != "":
+                    self.import_user_path_entry.insert(END, item['users_lists'])
+                if item['save_path'] != "":
+                    self.save_path_entry2.insert(END, item['save_path'])
+                if item['include_rts'] != "":
+                    if item['include_rts']:
+                        self.include_rt.set(1)
+                if item['exclude_replies'] != "":
+                    if item['exclude_replies']:
+                        self.exclude_replies.set(1)
+                if item['trim_user_info'] != "":
+                    if item['trim_user_info']:
+                        self.trim_user.set(1)
+                if item['since'] != "":
+                    self.since_date_entry.insert(END, item['since'])
+                if item['until'] != "":
+                    self.until_date_entry.insert(END, item['until'])
+                if int(item['res_per_page']) != 0:
+                    self.count_entry.insert(END, int(item['res_per_page']))
+
     def parameters_verification(self):
         """ Verifies that all mandatory parameters fron search tab form are filled """
 
@@ -472,7 +518,7 @@ class ScraperWindow:
                                                 "is "
                                                 "not valid.\nDo you want to "
                                                 "proceed anyway ?\nDefault is "
-                                                "date is 7 days ago ")):
+                                                "date is 7 days ago.")):
                 return [False]
             else:  # user answers yes we use default value
                 until = False
@@ -482,8 +528,9 @@ class ScraperWindow:
         if not (self.validate_geocode()):
             if not (messagebox.askyesno(title="Invalid parameter", message="The geocode you've "
                                                                            "entered "
-                                                                           "is not valid."
-                                        "Do you want to proceed anyway ?")):
+                                                                           "is not valid.\n"
+                                                                           "Do you want to "
+                                                                           "proceed anyway ?")):
                 return [False]
             else:
                 geocode = False
@@ -492,10 +539,11 @@ class ScraperWindow:
 
         if not (self.validate_int()):
             if not (messagebox.askyesno(title="Invalid parameter", message="You must select a "
-                                                                           "positive int number. "
-                                                                           "Default is 10. Do you"
+                                                                           "positive int number.\n"
+                                                                           "Do you "
                                                                            "want to proceed "
-                                                                           "anyway ?")):
+                                                                           "anyway ?\n Default is "
+                                                                           "10.")):
                 return [False]
             else:
                 size = False
@@ -505,11 +553,11 @@ class ScraperWindow:
         if not (self.validate_path()):
             messagebox.showerror(title="Invalid parameter", message="You must select a correct "
                                                                     "save "
-                                                                    "directory")
+                                                                    "directory.")
             return [False]
 
         if not (self.validate_query()):
-            messagebox.showerror(title="Invalid parameter", message="You must enter a query")
+            messagebox.showerror(title="Invalid parameter", message="You must enter a query.")
             return [False]
 
         return [True, geocode, until, size]
@@ -558,18 +606,35 @@ class ScraperWindow:
                 include_rt = True if self.include_rt.get() else False
                 only_userid = True if self.trim_user.get() else False
                 count = self.count.get() if self.count_entry.get() != 0 else None
-                sinceid = str(self.since_id.get()) if str(self.since_id.get()) != "" else None
-                untilid = str(self.until_id.get()) if str(self.until_id.get()) != "" else None
+                if validate_date_format(self.since_date.get()):
+                    sincedate = str(self.since_date.get())
+                else:
+                    sincedate = ""
 
-                print(exclude_replies, include_rt, only_userid, count, sinceid, untilid)
-                # Launches research
-                retrieve_tweets_from_users_list(names, self.save_path_entry.get(),
-                                                since_id=sinceid,
-                                                count=count,
-                                                max_id=untilid,
-                                                trim_user=only_userid,
-                                                exclude_replies=exclude_replies,
-                                                include_rts=include_rt)
+                if validate_date_format(self.until_date.get()):
+                    untildate = str(self.until_date.get())
+                else:
+                    untildate = ""
+
+                save_path = self.save_path_entry2.get() if self.save_path_entry2.get() != "" \
+                    else path.abspath(getcwd())
+
+                if (retrieve_tweets_from_users_list(names, save_path,
+                                                    since=sincedate,
+                                                    count=count,
+                                                    until=untildate,
+                                                    trim_user=only_userid,
+                                                    exclude_replies=exclude_replies,
+                                                    include_rts=include_rt)):
+
+                    save_user_settings(self.import_user_path_entry.get(), save_path, include_rt,
+                                       exclude_replies, only_userid, sincedate, untildate, count)
+                    messagebox.showinfo(title="Success",
+                                        message="The results have been saved to the "
+                                                "specified location.")
+                else:
+                    messagebox.showerror(titl="Error", message="Something wrong happenned. Pleae "
+                                                               "check API status or query format.")
 
     def search(self):
         """ Sends search parameters to API bridge """
@@ -596,17 +661,21 @@ class ScraperWindow:
                 messagebox.showerror(titl="Error", message="Something wrong happenned. Pleae "
                                                            "check API status or query format.")
 
-    def update_path(self, first_tab):
+    def update_path(self, tab):
         """ Updates path entry with user choice """
 
-        if first_tab:
+        if tab == "first":
             save_path = filedialog.askdirectory()
             self.save_path_entry.delete(0, END)  # Remove current text in entry
             self.save_path_entry.insert(0, save_path)  # Insert the 'path'
-        else:
+        elif tab == "second":
             save_path = filedialog.askopenfilename()
             self.import_user_path_entry.delete(0, END)
             self.import_user_path_entry.insert(0, save_path)
+        else:
+            save_path = filedialog.askdirectory()
+            self.save_path_entry2.delete(0, END)
+            self.save_path_entry2.insert(0, save_path)
 
     def start(self):
         """ Displays Tkinter window """
