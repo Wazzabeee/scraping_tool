@@ -1,9 +1,18 @@
+""" This module defines the class Menu
+
+This class file defines the GUI's menu.
+It defines title, icon and master
+
+"""
+
 import tkinter as tk
 
 from window import ScraperWindow
 
 
 class Menu:
+    """ This is class is the main tkinter object """
+
     def __init__(self, master):
         self.master = master
         self.master.iconbitmap("../images/cobweb.ico")
@@ -12,10 +21,8 @@ class Menu:
         self.frame.pack()
         self.master.update()
         self.center_window()
-
-    def twitter_window(self):
-        self.twitterWindow = tk.Toplevel(self.master)
-        self.app = ScraperWindow(self.twitterWindow)
+        self.twitter_window = tk.Toplevel(self.master)
+        self.app = ScraperWindow(self.twitter_window)
 
     def center_window(self):
         """ Centers the window on the screen based on screen size """

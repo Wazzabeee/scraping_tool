@@ -1,3 +1,14 @@
+""" This module regroups the search and user search functions
+
+Via the Tweepy library, user can retrieve tweets via a search query
+or from a list of users.
+Details about filters available can be found in Twitter's API documentation.
+Twitter's API credentials must be filled in constants.py file before
+running the script.
+Search settings are filled from the GUI's entries
+
+"""
+
 import json
 from datetime import datetime
 
