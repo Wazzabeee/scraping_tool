@@ -1,6 +1,6 @@
 <p float="left">
-  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/search_tab.PNG" width="100" />
-  <img src="/img2.pnhttps://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/user_tab.PNG" width="100" /> 
+  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/search_tab.PNG" width="300" />
+  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/user_tab.PNG" width="300" /> 
 </p>
 
 ![alt text](https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/search_tab.PNG)
