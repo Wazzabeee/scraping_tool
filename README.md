@@ -1,6 +1,6 @@
 <p float="left">
-  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/search_tab.PNG" width="400" />
-  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/user_tab.PNG" width="400" /> 
+  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/search_tab.PNG" width="450" />
+  <img src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/screenshots/user_tab.PNG" width="450" /> 
 </p>
 
 # Twitter Scraping Tool
