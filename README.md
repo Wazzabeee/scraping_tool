@@ -48,5 +48,5 @@ After trying out queries and requests with the GUI, you can setup automatization
 
 You can define the parameters of the search via the `cron_search.json` file (or `cron_user.json`). All parameters are the same from the GUI’s tab.
 
-When you’re ready you just have to setup the execution of the `cron_search.py` script at the desired times and days.
+When you’re ready you just have to setup the execution of the `cron_search.py` (or `cron_user.py`) script at the desired times and days.
 
