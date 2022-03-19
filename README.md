@@ -16,7 +16,10 @@ This project was made part of my internship at the "Human Computer Humans Intera
 To use this program, you will need your API keys retrieved after [creating a developer account at Twitter](https://developer.twitter.com/en/apply-for-access).
 
 Once retrieved the keys must be filled as follows.
-[Keys format](img/credentials.png)
+
+<img
+     src="https://github.com/Wazzabeee/scraping_tool/blob/main/src/images/credentials.png"
+     />
 
 **How to use**
 ---
@@ -36,4 +39,14 @@ $ pip3 install -r requirements.txt
 # Run the app
 $ python main.py
 ```
+
+## Parameter details
+More details on the parameters available can be seen on [Twitter's offical page](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/search/api-reference/get-search-tweets).
+
+## CRON automatization
+After trying out queries and requests with the GUI, you can setup automatizations.
+
+You can define the parameters of the search via the `cron_search.json` file (or `cron_user.json`). All parameters are the same from the GUI’s tab.
+
+When you’re ready you just have to setup the execution of the `cron_search.py` script at the desired times and days.
 
