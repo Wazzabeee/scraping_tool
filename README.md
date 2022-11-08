@@ -33,7 +33,7 @@ $ cd scraping_tool
 # Install requirements
 $ pip3 install -r requirements.txt
 
-# Fill credentials in credentials.py
+# Fill credentials in constants.py
 # See "Setup"
 
 # Run the app
